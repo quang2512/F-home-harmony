@@ -1,0 +1,231 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# HomeHarmony - Shared Living Management App
+
+## 🏠 App Overview
+
+HomeHarmony ("Shared Living Symphony") is a React-based web application designed to help roommates and shared living communities manage their daily tasks, inventory, and member responsibilities efficiently. The app provides a centralized dashboard for tracking household tasks, monitoring inventory levels, and managing member workloads.
+
+## 🏗️ Architecture & Tech Stack
+
+### Frontend Framework
+- **React 18.3.1** - Modern React with hooks and functional components
+- **TypeScript** - Full type safety throughout the application
+- **Vite** - Fast build tool and development server
+- **React Router DOM 6.26.2** - Client-side routing
+
+### UI Framework & Styling
+- **shadcn/ui** - High-quality, accessible UI components built on Radix UI
+- **Tailwind CSS 3.4.11** - Utility-first CSS framework
+- **Tailwind CSS Animate** - Animation utilities
+- **Lucide React** - Modern icon library
+- **CSS Variables** - Dynamic theming support
+
+### State Management & Data
+- **Local State** - React useState for component state
+- **Local Storage** - Persistent data storage (members, tasks, items)
+- **TanStack Query 5.56.2** - Server state management (ready for API integration)
+
+### Form Handling & Validation
+- **React Hook Form 7.53.0** - Performant form library
+- **Zod 3.23.8** - Schema validation
+- **@hookform/resolvers** - Integration between RHF and Zod
+
+### Additional Libraries
+- **date-fns** - Date manipulation and formatting
+- **class-variance-authority** - Component variant management
+- **clsx & tailwind-merge** - Conditional CSS classes
+- **sonner** - Toast notifications
+
+## 📁 Project Structure
+
+```
+src/
+├── components/           # React components
+│   ├── ui/              # shadcn/ui components (50+ components)
+│   ├── Dashboard.tsx     # Main dashboard with metrics
+│   ├── Header.tsx        # Navigation header
+│   ├── MemberManagement.tsx  # Member CRUD operations
+│   ├── TaskManagement.tsx    # Task CRUD operations
+│   └── ItemInventory.tsx     # Inventory management
+├── hooks/               # Custom React hooks
+│   ├── use-mobile.tsx   # Mobile detection
+│   └── use-toast.ts     # Toast notifications
+├── lib/                 # Utility libraries
+│   └── utils.ts         # Common utility functions
+├── pages/               # Page components
+│   ├── Index.tsx        # Main application page
+│   └── NotFound.tsx     # 404 page
+├── App.tsx              # Root application component
+├── main.tsx             # Application entry point
+├── index.css            # Global styles and CSS variables
+└── vite-env.d.ts        # Vite type declarations
+```
+
+## 🎯 Core Features
+
+### 1. Dashboard
+- **Metrics Overview**: Total tasks, completed tasks, low stock items, overdue tasks
+- **Progress Tracking**: Overall completion rate with visual progress bars
+- **Member Workload**: Individual member task distribution and completion rates
+- **Low Stock Alerts**: Automatic alerts for items below minimum quantity
+
+### 2. Task Management
+- **Task CRUD**: Create, read, update, delete household tasks
+- **Assignment System**: Assign tasks to specific members
+- **Priority Levels**: High, medium, low priority classification
+- **Scheduling**: Recurring task schedules (e.g., "Monday, Wednesday, Friday")
+- **Due Dates**: Task deadline tracking
+- **Weighted Tasks**: Tasks have weight values for workload balancing
+- **Duration Tracking**: Estimated time to complete tasks
+
+### 3. Inventory Management
+- **Item Tracking**: Monitor household items and supplies
+- **Quantity Management**: Current stock levels with units
+- **Minimum Thresholds**: Automatic low stock detection
+- **Categories**: Organize items by type
+
+### 4. Member Management
+- **Member Profiles**: Name, avatar, color coding
+- **Admin Roles**: Designated administrators with special permissions
+- **Workload Analytics**: Track individual contributions and completion rates
+
+## 💾 Data Models
+
+### Member Interface
+```typescript
+interface Member {
+  id: string;
+  name: string;
+  avatar: string;        // Emoji or icon
+  color: string;         // Tailwind color class
+  isAdmin: boolean;
+}
+```
+
+### Task Interface
+```typescript
+interface Task {
+  id: string;
+  name: string;
+  description: string;
+  assignedTo: string;    // Member ID
+  schedule: string;      // Human-readable schedule
+  priority: 'high' | 'medium' | 'low';
+  duration: number;      // Minutes
+  completed: boolean;
+  dueDate: Date;
+  weight: number;        // For workload balancing
+}
+```
+
+### Item Interface
+```typescript
+interface Item {
+  id: string;
+  name: string;
+  quantity: number;
+  minQuantity: number;   // Threshold for low stock alerts
+  unit: string;          // e.g., 'bottles', 'kg', 'rolls'
+}
+```
+
+## 🎨 Design System
+
+### Color Scheme
+- **Primary**: Blue gradient (`from-blue-500 to-indigo-600`)
+- **Background**: Light blue gradient (`from-blue-50 to-indigo-100`)
+- **Success**: Green (`green-500 to green-600`)
+- **Warning**: Orange (`orange-500 to orange-600`)
+- **Danger**: Red (`red-500 to red-600`)
+
+### Typography
+- **Headers**: Bold, clean sans-serif
+- **Body**: Regular weight for readability
+- **Interactive Elements**: Medium weight for emphasis
+
+### Component Design
+- **Cards**: Clean, minimal with subtle shadows
+- **Buttons**: Rounded corners with hover effects
+- **Progress Bars**: Visual feedback for completion rates
+- **Badges**: Color-coded status indicators
+
+## 🔧 Development Configuration
+
+### Build Tools
+- **Vite Config**: React SWC plugin for fast compilation
+- **Port**: Development server runs on port 8080
+- **Host**: Binds to all interfaces (`::`)
+- **Path Aliases**: `@/` maps to `src/`
+
+### Code Quality
+- **ESLint**: Code linting with React-specific rules
+- **TypeScript**: Strict type checking
+- **Component Tagger**: Development-only component tracking
+
+### Package Management
+- **Bun**: Fast package manager and runtime
+- **Lock File**: `bun.lockb` for dependency locking
+
+## 📱 Responsive Design
+
+### Breakpoints
+- **Mobile**: Base styles (< 640px)
+- **Tablet**: `sm:` prefix (≥ 640px)
+- **Desktop**: `md:` and `lg:` prefixes (≥ 768px, ≥ 1024px)
+- **Large Desktop**: `xl:` and `2xl:` prefixes (≥ 1280px, ≥ 1536px)
+
+### Layout Adaptations
+- **Grid Layouts**: Responsive grid columns (1 → 2 → 3 → 4)
+- **Navigation**: Icon-only on mobile, with labels on larger screens
+- **Cards**: Full-width on mobile, grid layout on desktop
+
+## 🔄 State Management Strategy
+
+### Local Storage Keys
+- `homeharmony-members`: Member data persistence
+- `homeharmony-tasks`: Task data persistence
+- `homeharmony-items`: Inventory data persistence
+
+### State Synchronization
+- **useEffect Hooks**: Automatic saving to localStorage on state changes
+- **Initial Load**: Data restoration from localStorage on app mount
+- **Fallback Data**: Default members, tasks, and items if no saved data
+
+## 🚀 Future Enhancements Ready
+
+### API Integration
+- **TanStack Query**: Already configured for server state
+- **RESTful Architecture**: Component structure supports easy API integration
+- **Authentication**: Ready for user authentication implementation
+
+### Advanced Features
+- **Real-time Updates**: WebSocket support ready
+- **Notifications**: Toast system in place for user feedback
+- **Charts & Analytics**: Recharts library available for advanced visualizations
+- **Mobile App**: React Native transition possible
+
+## 📋 Component Inventory
+
+### Available shadcn/ui Components
+The app includes 50+ pre-built, accessible UI components:
+- Layout: Card, Separator, Tabs, Accordion
+- Forms: Input, Textarea, Select, Checkbox, Radio Group, Switch
+- Feedback: Alert, Toast, Progress, Badge, Skeleton
+- Overlays: Dialog, Drawer, Popover, Tooltip, Sheet
+- Navigation: Button, Dropdown Menu, Menubar, Breadcrumb
+- Data Display: Table, Avatar, Calendar, Chart
+- Advanced: Command, Resizable Panels, Carousel
+
+### Custom Components
+- **Dashboard**: Comprehensive metrics and analytics view
+- **Header**: Navigation with tab switching
+- **MemberManagement**: CRUD operations for household members
+- **TaskManagement**: Full task lifecycle management
+- **ItemInventory**: Inventory tracking and management
+
+This architecture provides a solid foundation for a scalable, maintainable shared living management application with room for future enhancements and API integration.
+

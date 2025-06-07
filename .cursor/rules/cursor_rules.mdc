@@ -1,0 +1,466 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Cursor AI Development Rules for HomeHarmony
+
+## 🤖 AI Assistant Guidelines
+
+These rules are specifically designed for Cursor AI to understand the HomeHarmony project structure, conventions, and provide optimal development assistance.
+
+## 📋 Project Context
+
+### Application Overview
+- **Name**: HomeHarmony (Shared Living Symphony)
+- **Type**: React TypeScript SPA for shared living management
+- **Framework**: Vite + React 18 + TypeScript + shadcn/ui + Tailwind CSS
+- **State**: Local state with localStorage persistence
+- **Purpose**: Household task management, inventory tracking, member management
+
+### Key Technologies
+```json
+{
+  "frontend": "React 18.3.1 + TypeScript",
+  "bundler": "Vite 5.4.1",
+  "ui": "shadcn/ui + Radix UI + Tailwind CSS",
+  "routing": "React Router DOM 6.26.2",
+  "forms": "React Hook Form + Zod validation",
+  "state": "useState + localStorage",
+  "icons": "Lucide React",
+  "notifications": "Sonner + shadcn/ui toast",
+  "package_manager": "Bun"
+}
+```
+
+## 🎯 Code Generation Rules
+
+### 1. Component Creation
+When creating new components:
+
+```typescript
+// Required imports and structure
+import React from 'react';
+import { ComponentProps } from '@/types'; // if types needed
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+// Always define props interface
+interface NewComponentProps {
+  title: string;
+  isVisible?: boolean;
+  onAction?: () => void;
+}
+
+// Use React.FC with proper typing
+export const NewComponent: React.FC<NewComponentProps> = ({ 
+  title, 
+  isVisible = true, 
+  onAction 
+}) => {
+  // Component implementation
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* Content */}
+      </CardContent>
+    </Card>
+  );
+};
+```
+
+### 2. State Management Patterns
+
+```typescript
+// For data that needs persistence
+const [items, setItems] = useState<Item[]>([]);
+
+// localStorage save effect
+useEffect(() => {
+  localStorage.setItem('homeharmony-items', JSON.stringify(items));
+}, [items]);
+
+// localStorage load effect
+useEffect(() => {
+  const saved = localStorage.getItem('homeharmony-items');
+  if (saved) {
+    try {
+      setItems(JSON.parse(saved));
+    } catch (error) {
+      console.error('Failed to parse saved items:', error);
+    }
+  }
+}, []);
+
+// Immutable updates
+const updateItem = (id: string, updates: Partial<Item>) => {
+  setItems(prev => prev.map(item => 
+    item.id === id ? { ...item, ...updates } : item
+  ));
+};
+```
+
+### 3. Form Implementation
+
+```typescript
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+
+// Define schema
+const formSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  quantity: z.number().min(1, 'Quantity must be positive'),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
+// In component
+const form = useForm<FormData>({
+  resolver: zodResolver(formSchema),
+  defaultValues: {
+    name: '',
+    quantity: 1,
+  },
+});
+
+const onSubmit = (data: FormData) => {
+  // Handle form submission
+};
+
+// JSX
+<Form {...form}>
+  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <FormField
+      control={form.control}
+      name="name"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Name</FormLabel>
+          <FormControl>
+            <Input {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  </form>
+</Form>
+```
+
+## 🎨 UI/Styling Guidelines
+
+### 1. Layout Patterns
+
+```typescript
+// Dashboard grid
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  {/* Cards */}
+</div>
+
+// Content container
+<div className="container mx-auto px-4 py-8">
+  {/* Content */}
+</div>
+
+// Card structure
+<Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+  <CardContent className="p-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-blue-100">Label</p>
+        <p className="text-3xl font-bold">{value}</p>
+      </div>
+      <div className="text-4xl">{icon}</div>
+    </div>
+  </CardContent>
+</Card>
+```
+
+### 2. Color Scheme Usage
+
+```typescript
+// Status colors
+const statusColors = {
+  primary: 'bg-gradient-to-r from-blue-500 to-blue-600',
+  success: 'bg-gradient-to-r from-green-500 to-green-600',
+  warning: 'bg-gradient-to-r from-orange-500 to-orange-600',
+  danger: 'bg-gradient-to-r from-red-500 to-red-600',
+  background: 'bg-gradient-to-br from-blue-50 to-indigo-100'
+};
+
+// Priority colors
+const priorityColors = {
+  high: 'text-red-600 bg-red-50 border-red-200',
+  medium: 'text-orange-600 bg-orange-50 border-orange-200',
+  low: 'text-green-600 bg-green-50 border-green-200'
+};
+```
+
+### 3. Responsive Design
+
+```typescript
+// Always include responsive classes
+<div className="hidden sm:inline"> {/* Desktop only */}
+<div className="block sm:hidden">   {/* Mobile only */}
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3"> {/* Responsive grid */}
+```
+
+## 📊 Data Type Definitions
+
+### Core Interfaces
+
+```typescript
+// Always use these exact interfaces
+interface Member {
+  id: string;
+  name: string;
+  avatar: string;        // Emoji
+  color: string;         // Tailwind color class
+  isAdmin: boolean;
+}
+
+interface Task {
+  id: string;
+  name: string;
+  description: string;
+  assignedTo: string;    // Member ID
+  schedule: string;      // Human-readable
+  priority: 'high' | 'medium' | 'low';
+  duration: number;      // Minutes
+  completed: boolean;
+  dueDate: Date;
+  weight: number;        // For workload balancing
+}
+
+interface Item {
+  id: string;
+  name: string;
+  quantity: number;
+  minQuantity: number;
+  unit: string;
+}
+
+// Tab type
+type Tab = 'dashboard' | 'tasks' | 'items' | 'members';
+```
+
+## 🛠️ Utility Functions
+
+### Common Patterns
+
+```typescript
+// ID generation
+const generateId = () => Date.now().toString();
+
+// Date formatting
+import { format } from 'date-fns';
+const formatDate = (date: Date) => format(date, 'MMM dd, yyyy');
+
+// Class name merging
+import { cn } from '@/lib/utils';
+const className = cn('base-class', conditionalClass && 'conditional-class');
+
+// Safe localStorage operations
+const saveToStorage = (key: string, data: any) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (error) {
+    console.error(`Failed to save ${key}:`, error);
+  }
+};
+
+const loadFromStorage = <T>(key: string, defaultValue: T): T => {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : defaultValue;
+  } catch (error) {
+    console.error(`Failed to load ${key}:`, error);
+    return defaultValue;
+  }
+};
+```
+
+## 🔧 Development Helpers
+
+### 1. Toast Notifications
+
+```typescript
+import { toast } from 'sonner';
+
+// Success message
+toast.success('Task completed successfully!');
+
+// Error message
+toast.error('Failed to save changes');
+
+// Info message
+toast.info('Item stock is running low');
+```
+
+### 2. Icon Usage
+
+```typescript
+import { 
+  Home, 
+  CheckSquare, 
+  Package, 
+  Users, 
+  Plus, 
+  Edit, 
+  Trash2,
+  AlertTriangle
+} from 'lucide-react';
+
+// Use consistent icon sizes
+<Home className="h-4 w-4" />      // Small icons
+<Home className="h-5 w-5" />      // Medium icons
+<Home className="h-6 w-6" />      // Large icons
+```
+
+## 🚨 Common Mistakes to Avoid
+
+### ❌ Don't Do
+
+```typescript
+// Mutating state directly
+tasks[0].completed = true;
+setTasks(tasks);
+
+// Missing TypeScript types
+const component = (props: any) => { };
+
+// Inconsistent styling
+<div style={{ padding: '20px' }}>
+
+// Not handling loading/error states
+const handleSubmit = async (data) => {
+  await api.post('/tasks', data); // No error handling
+};
+
+// Missing accessibility
+<button onClick={handleClick}>Submit</button> // No aria-label
+
+// Hardcoded values
+if (priority === 'High') { } // Should be 'high'
+```
+
+### ✅ Do Instead
+
+```typescript
+// Immutable updates
+setTasks(prev => prev.map(task => 
+  task.id === taskId ? { ...task, completed: true } : task
+));
+
+// Proper TypeScript
+interface ComponentProps {
+  title: string;
+}
+const Component: React.FC<ComponentProps> = ({ title }) => { };
+
+// Consistent styling
+<div className="p-5">
+
+// Proper error handling
+const handleSubmit = async (data: FormData) => {
+  try {
+    await api.post('/tasks', data);
+    toast.success('Task created!');
+  } catch (error) {
+    toast.error('Failed to create task');
+  }
+};
+
+// Accessible components
+<Button aria-label="Create new task" onClick={handleClick}>
+  <Plus className="h-4 w-4" />
+</Button>
+
+// Use constants
+if (priority === 'high') { } // Consistent with interface
+```
+
+## 📁 File Creation Guidelines
+
+### New Component File
+```typescript
+// src/components/NewFeature.tsx
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+
+interface NewFeatureProps {
+  // Define props
+}
+
+export const NewFeature: React.FC<NewFeatureProps> = ({ }) => {
+  // Implementation
+  return (
+    <Card>
+      {/* Content */}
+    </Card>
+  );
+};
+```
+
+### New Page File
+```typescript
+// src/pages/NewPage.tsx
+import React from 'react';
+import { Header } from '@/components/Header';
+
+const NewPage = () => {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <Header activeTab="dashboard" setActiveTab={() => {}} />
+      <main className="container mx-auto px-4 py-8">
+        {/* Page content */}
+      </main>
+    </div>
+  );
+};
+
+export default NewPage;
+```
+
+## 🔄 State Updates
+
+### CRUD Operations
+
+```typescript
+// Create
+const addItem = (newItem: Omit<Item, 'id'>) => {
+  const item: Item = {
+    id: generateId(),
+    ...newItem
+  };
+  setItems(prev => [...prev, item]);
+};
+
+// Update
+const updateItem = (id: string, updates: Partial<Item>) => {
+  setItems(prev => prev.map(item => 
+    item.id === id ? { ...item, ...updates } : item
+  ));
+};
+
+// Delete
+const deleteItem = (id: string) => {
+  setItems(prev => prev.filter(item => item.id !== id));
+};
+
+// Toggle boolean
+const toggleTaskCompletion = (id: string) => {
+  setTasks(prev => prev.map(task => 
+    task.id === id ? { ...task, completed: !task.completed } : task
+  ));
+};
+```
+
+These rules ensure that Cursor AI generates code that is consistent with the project's architecture, follows best practices, and maintains the established patterns and conventions of the HomeHarmony application.
+

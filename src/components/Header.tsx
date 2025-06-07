@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 
@@ -7,9 +6,13 @@ type Tab = 'dashboard' | 'tasks' | 'items' | 'members';
 interface HeaderProps {
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
+  children?: React.ReactNode;
+  userName?: string;
+  userAvatar?: string;
+  userColor?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
+export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, children, userName, userAvatar, userColor }) => {
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: '🏠' },
     { id: 'tasks', label: 'Tasks', icon: '✅' },
@@ -44,6 +47,17 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
               </Button>
             ))}
           </nav>
+          <div className="flex items-center gap-4 ml-4">
+            {userName && (
+              <span className="flex items-center text-gray-700 font-medium">
+                {userAvatar && (
+                  <span className={`mr-2 w-7 h-7 rounded-full flex items-center justify-center text-lg ${userColor ?? ''}`}>{userAvatar}</span>
+                )}
+                {userName}
+              </span>
+            )}
+            {children}
+          </div>
         </div>
       </div>
     </header>

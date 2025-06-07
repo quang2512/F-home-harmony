@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,9 +18,10 @@ interface Member {
 interface MemberManagementProps {
   members: Member[];
   setMembers: (members: Member[]) => void;
+  currentUser: { name: string; username: string; password: string };
 }
 
-export const MemberManagement: React.FC<MemberManagementProps> = ({ members, setMembers }) => {
+export const MemberManagement: React.FC<MemberManagementProps> = ({ members, setMembers, currentUser }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newMember, setNewMember] = useState({
     name: '',
@@ -34,6 +34,10 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({ members, set
     'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-red-500', 
     'bg-yellow-500', 'bg-indigo-500', 'bg-pink-500', 'bg-teal-500'
   ];
+
+  // Find if current user is admin
+  const currentMember = members.find(m => m.name.toLowerCase() === currentUser.username);
+  const isCurrentUserAdmin = !!currentMember?.isAdmin;
 
   const addMember = () => {
     const member: Member = {
@@ -63,12 +67,15 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({ members, set
     // Prevent removing the last admin
     const isLastAdmin = members.filter(m => m.isAdmin).length === 1 && 
                         members.find(m => m.id === memberId)?.isAdmin;
-    
     if (isLastAdmin) {
       alert("Cannot remove the last admin. Please assign admin privileges to another member first.");
       return;
     }
-    
+    // Prevent removing self
+    if (currentMember && currentMember.id === memberId) {
+      alert("You cannot remove yourself.");
+      return;
+    }
     setMembers(members.filter(member => member.id !== memberId));
   };
 
@@ -155,18 +162,42 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({ members, set
                   variant="outline"
                   size="sm"
                   className="w-full"
+                  disabled={!isCurrentUserAdmin || (currentMember && currentMember.id === member.id && member.isAdmin)}
+                  title={
+                    !isCurrentUserAdmin ? 'Only admins can assign or remove admin rights'
+                    : (currentMember && currentMember.id === member.id && member.isAdmin) ? 'You cannot remove yourself from admin'
+                    : undefined
+                  }
                 >
                   {member.isAdmin ? '👑 Remove Admin' : '👑 Make Admin'}
                 </Button>
+                {!isCurrentUserAdmin && (
+                  <div className="text-xs text-gray-400 text-center mt-1">Only admins can assign or remove admin rights</div>
+                )}
+                {currentMember && currentMember.id === member.id && member.isAdmin && (
+                  <div className="text-xs text-gray-400 text-center mt-1">You cannot remove yourself from admin</div>
+                )}
                 <Button
                   onClick={() => removeMember(member.id)}
                   variant="destructive"
                   size="sm"
                   className="w-full"
-                  disabled={members.length === 1}
+                  disabled={!isCurrentUserAdmin || (currentMember && currentMember.id === member.id) || members.length === 1}
+                  title={
+                    !isCurrentUserAdmin ? 'Only admins can remove members'
+                    : (currentMember && currentMember.id === member.id) ? 'You cannot remove yourself'
+                    : members.length === 1 ? 'Cannot remove the last member'
+                    : undefined
+                  }
                 >
                   🗑️ Remove Member
                 </Button>
+                {!isCurrentUserAdmin && (
+                  <div className="text-xs text-gray-400 text-center mt-1">Only admins can remove members</div>
+                )}
+                {currentMember && currentMember.id === member.id && (
+                  <div className="text-xs text-gray-400 text-center mt-1">You cannot remove yourself</div>
+                )}
               </div>
             </CardContent>
           </Card>
