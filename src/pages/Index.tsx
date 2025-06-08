@@ -5,19 +5,20 @@ import { MemberManagement } from '@/components/MemberManagement';
 import { TaskManagement } from '@/components/TaskManagement';
 import { ItemInventory } from '@/components/ItemInventory';
 import { Button } from '@/components/ui/button';
+import { fetchMembers, loginMember } from '@/lib/memberApi';
 
 type Tab = 'dashboard' | 'tasks' | 'items' | 'members';
-
-const DEFAULT_USERS = [
-  { name: 'Quang', username: 'quang', password: '1234' },
-  { name: 'Loi', username: 'loi', password: '1234' },
-  { name: 'Huy', username: 'huy', password: '1234' },
-];
 
 function getStoredUser() {
   try {
     const user = localStorage.getItem('homeharmony-user');
-    return user ? JSON.parse(user) : null;
+    if (!user) return null;
+    const parsed = JSON.parse(user);
+    // Ensure isAdmin is boolean
+    if (parsed && typeof parsed.isAdmin !== 'boolean') {
+      parsed.isAdmin = parsed.isAdmin === true || parsed.isAdmin === 'true';
+    }
+    return parsed;
   } catch {
     return null;
   }
@@ -25,11 +26,7 @@ function getStoredUser() {
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
-  const [members, setMembers] = useState([
-    { id: '1', name: 'Quang', avatar: '👨‍💻', color: 'bg-blue-500', isAdmin: true },
-    { id: '2', name: 'Loi', avatar: '👨‍🎓', color: 'bg-green-500', isAdmin: false },
-    { id: '3', name: 'Huy', avatar: '👨‍🍳', color: 'bg-purple-500', isAdmin: false },
-  ]);
+  const [members, setMembers] = useState([]);
   
   const [tasks, setTasks] = useState([
     { 
@@ -114,16 +111,22 @@ const Index = () => {
     if (savedItems) setItems(JSON.parse(savedItems));
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const found = DEFAULT_USERS.find(
-      u => u.username === loginForm.username.trim().toLowerCase() && u.password === loginForm.password
-    );
-    if (found) {
-      setUser(found);
-      setLoginError('');
-    } else {
-      setLoginError('Invalid username or password');
+    setLoginError('');
+    try {
+      const found = await loginMember(loginForm.username.trim(), loginForm.password);
+      if (found) {
+        found.isAdmin = Boolean(found.isAdmin); // Ensure boolean
+        setUser(found);
+        // Fetch all members from Supabase after login
+        const allMembers = await fetchMembers();
+        setMembers(allMembers);
+      } else {
+        setLoginError('Invalid username or password');
+      }
+    } catch (err: any) {
+      setLoginError('Login failed: ' + err.message);
     }
   };
 
@@ -146,8 +149,7 @@ const Index = () => {
     }
   };
 
-  // Find the current member object for avatar/color
-  const currentMember = members.find(m => m.name.toLowerCase() === user?.username);
+  const currentMember = user;
 
   // Always require login before rendering app content
   if (!user) {
@@ -181,7 +183,7 @@ const Index = () => {
           {loginError && <div className="text-red-600 text-sm text-center">{loginError}</div>}
           <Button type="submit" className="w-full">Login</Button>
           <div className="text-xs text-gray-500 text-center pt-2">
-            <div>Default users: quang, loi, huy (password: 1234)</div>
+            <div>Default users: quang, loi, huy (password: ****)</div>
           </div>
         </form>
       </div>
@@ -193,7 +195,7 @@ const Index = () => {
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        userName={user.name}
+        userName={currentMember?.name}
         userAvatar={currentMember?.avatar}
         userColor={currentMember?.color}
       >
@@ -203,7 +205,7 @@ const Index = () => {
       </Header>
       <main className="container mx-auto px-4 py-8">
         {activeTab === 'tasks' ? (
-          <TaskManagement members={members} tasks={tasks} setTasks={setTasks} user={user} />
+          <TaskManagement members={members} tasks={tasks} setTasks={setTasks} user={currentMember} />
         ) : renderContent()}
       </main>
     </div>

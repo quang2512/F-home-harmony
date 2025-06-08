@@ -98,7 +98,7 @@ export const TaskManagement: React.FC<TaskManagementProps> = ({ members, tasks, 
   };
 
   const toggleTaskCompletion = (taskId: string) => {
-    setTasks(tasks.map(task =>
+    setTasks(tasks.map(task => 
       task.id === taskId
         ? { ...task, completed: !task.completed, dueDate: !task.completed ? new Date() : task.dueDate }
         : task
@@ -281,9 +281,9 @@ export const TaskManagement: React.FC<TaskManagementProps> = ({ members, tasks, 
                     {task.name}
                   </CardTitle>
                   <div className="flex items-center space-x-2">
-                    <Badge className={priorityColors[task.priority as keyof typeof priorityColors]}>
-                      {task.priority}
-                    </Badge>
+                  <Badge className={priorityColors[task.priority as keyof typeof priorityColors]}>
+                    {task.priority}
+                  </Badge>
                     <Button size="icon" variant="ghost" aria-label="Edit Task" onClick={() => openEditDialog(task)}>
                       <Edit className="h-4 w-4" />
                     </Button>

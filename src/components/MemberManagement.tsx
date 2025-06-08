@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,10 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { fetchMembers, addMember as apiAddMember, updateMember, deleteMember } from '@/lib/memberApi';
 
 interface Member {
   id: string;
   name: string;
+  password: string;
   avatar: string;
   color: string;
   isAdmin: boolean;
@@ -18,7 +20,7 @@ interface Member {
 interface MemberManagementProps {
   members: Member[];
   setMembers: (members: Member[]) => void;
-  currentUser: { name: string; username: string; password: string };
+  currentUser: Member;
 }
 
 export const MemberManagement: React.FC<MemberManagementProps> = ({ members, setMembers, currentUser }) => {
@@ -29,6 +31,12 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({ members, set
     color: 'bg-blue-500'
   });
 
+  useEffect(() => {
+    fetchMembers()
+      .then(setMembers)
+      .catch(err => alert(err.message));
+  }, []);
+
   const avatarOptions = ['👨‍💻', '👩‍💻', '👨‍🎓', '👩‍🎓', '👨‍🍳', '👩‍🍳', '👨‍🎨', '👩‍🎨', '👤', '👥'];
   const colorOptions = [
     'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-red-500', 
@@ -36,34 +44,41 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({ members, set
   ];
 
   // Find if current user is admin
-  const currentMember = members.find(m => m.name.toLowerCase() === currentUser.username);
+  const currentMember = members.find(m => m.id === currentUser.id);
   const isCurrentUserAdmin = !!currentMember?.isAdmin;
 
-  const addMember = () => {
-    const member: Member = {
-      id: Date.now().toString(),
-      ...newMember,
-      isAdmin: false
-    };
-    
-    setMembers([...members, member]);
-    setNewMember({
-      name: '',
-      avatar: '👤',
-      color: 'bg-blue-500'
-    });
-    setIsDialogOpen(false);
+  const addMember = async () => {
+    try {
+      const member: Omit<Member, 'id'> = {
+        ...newMember,
+        password: '', // Set password as needed
+        isAdmin: false
+      };
+      const created = await apiAddMember(member);
+      setMembers([...members, created]);
+      setNewMember({
+        name: '',
+        avatar: '👤',
+        color: 'bg-blue-500'
+      });
+      setIsDialogOpen(false);
+    } catch (err: any) {
+      alert(err.message);
+    }
   };
 
-  const toggleAdmin = (memberId: string) => {
-    setMembers(members.map(member => 
-      member.id === memberId 
-        ? { ...member, isAdmin: !member.isAdmin }
-        : member
-    ));
+  const toggleAdmin = async (memberId: string) => {
+    try {
+      const member = members.find(m => m.id === memberId);
+      if (!member) return;
+      const updated = await updateMember(memberId, { isAdmin: !member.isAdmin });
+      setMembers(members.map(m => m.id === memberId ? updated : m));
+    } catch (err: any) {
+      alert(err.message);
+    }
   };
 
-  const removeMember = (memberId: string) => {
+  const removeMember = async (memberId: string) => {
     // Prevent removing the last admin
     const isLastAdmin = members.filter(m => m.isAdmin).length === 1 && 
                         members.find(m => m.id === memberId)?.isAdmin;
@@ -76,7 +91,12 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({ members, set
       alert("You cannot remove yourself.");
       return;
     }
-    setMembers(members.filter(member => member.id !== memberId));
+    try {
+      await deleteMember(memberId);
+      setMembers(members.filter(member => member.id !== memberId));
+    } catch (err: any) {
+      alert(err.message);
+    }
   };
 
   return (
@@ -217,3 +237,4 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({ members, set
     </div>
   );
 };
+
