@@ -21,6 +21,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { getTimeLeft } from "@/lib/utils";
 import { Edit } from "lucide-react";
+import { addTask, updateTask, deleteTask } from "@/lib/taskApi";
+import { toast } from "sonner";
 
 interface Member {
   id: string;
@@ -97,40 +99,54 @@ export const TaskManagement: React.FC<TaskManagementProps> = ({
     return lightestWorkload.id;
   };
 
-  const addTask = () => {
-    const assignedTo = calculateFairAssignment();
-    const task: Task = {
-      id: Date.now().toString(),
-      ...newTask,
-      assignedTo,
-      completed: false,
-      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-    };
+  const handleAddTask = async () => {
+    try {
+      const assignedTo = calculateFairAssignment();
+      const taskData = {
+        ...newTask,
+        assignedTo,
+        completed: false,
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+      };
 
-    setTasks([...tasks, task]);
-    setNewTask({
-      name: "",
-      description: "",
-      schedule: "",
-      priority: "medium",
-      duration: 30,
-      weight: 2,
-    });
-    setIsDialogOpen(false);
+      const newTaskFromDB = await addTask(taskData);
+      setTasks((prev) => [...prev, newTaskFromDB]);
+
+      setNewTask({
+        name: "",
+        description: "",
+        schedule: "",
+        priority: "medium",
+        duration: 30,
+        weight: 2,
+      });
+      setIsDialogOpen(false);
+      toast.success("Task added successfully!");
+    } catch (error) {
+      console.error("Failed to add task:", error);
+      toast.error("Failed to add task. Please try again.");
+    }
   };
 
-  const toggleTaskCompletion = (taskId: string) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              completed: !task.completed,
-              dueDate: !task.completed ? new Date() : task.dueDate,
-            }
-          : task
-      )
-    );
+  const toggleTaskCompletion = async (taskId: string) => {
+    try {
+      const task = tasks.find((t) => t.id === taskId);
+      if (!task) return;
+
+      const updates = {
+        completed: !task.completed,
+        dueDate: !task.completed ? new Date() : task.dueDate,
+      };
+
+      const updatedTask = await updateTask(taskId, updates);
+      setTasks((prev) => prev.map((t) => (t.id === taskId ? updatedTask : t)));
+      toast.success(
+        task.completed ? "Task marked incomplete" : "Task completed!"
+      );
+    } catch (error) {
+      console.error("Failed to update task:", error);
+      toast.error("Failed to update task. Please try again.");
+    }
   };
 
   const reassignTasks = () => {
@@ -166,18 +182,29 @@ export const TaskManagement: React.FC<TaskManagementProps> = ({
     setEditDialogOpen(true);
   };
 
-  const handleEditChange = (field: keyof Task, value: any) => {
+  const handleEditChange = (
+    field: keyof Task,
+    value: string | number | Date | boolean
+  ) => {
     if (!editingTask) return;
     setEditingTask({ ...editingTask, [field]: value });
   };
 
-  const saveTaskEdits = () => {
+  const saveTaskEdits = async () => {
     if (!editingTask) return;
-    setTasks(
-      tasks.map((t) => (t.id === editingTask.id ? { ...editingTask } : t))
-    );
-    setEditDialogOpen(false);
-    setEditingTask(null);
+
+    try {
+      const updatedTask = await updateTask(editingTask.id, editingTask);
+      setTasks((prev) =>
+        prev.map((t) => (t.id === editingTask.id ? updatedTask : t))
+      );
+      setEditDialogOpen(false);
+      setEditingTask(null);
+      toast.success("Task updated successfully!");
+    } catch (error) {
+      console.error("Failed to update task:", error);
+      toast.error("Failed to update task. Please try again.");
+    }
   };
 
   const currentMember = members.find(
@@ -321,7 +348,7 @@ export const TaskManagement: React.FC<TaskManagementProps> = ({
                     />
                   </div>
                 </div>
-                <Button onClick={addTask} className="w-full">
+                <Button onClick={handleAddTask} className="w-full">
                   Create Task
                 </Button>
               </div>

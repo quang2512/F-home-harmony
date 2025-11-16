@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { addItem, updateItem, deleteItem as deleteItemApi } from '@/lib/itemApi';
+import { toast } from 'sonner';
 
 interface Item {
   id: string;
@@ -29,32 +31,48 @@ export const ItemInventory: React.FC<ItemInventoryProps> = ({ items, setItems })
     unit: ''
   });
 
-  const addItem = () => {
-    const item: Item = {
-      id: Date.now().toString(),
-      ...newItem
-    };
-    
-    setItems([...items, item]);
-    setNewItem({
-      name: '',
-      quantity: 0,
-      minQuantity: 1,
-      unit: ''
-    });
-    setIsDialogOpen(false);
+  const handleAddItem = async () => {
+    try {
+      const newItemFromDB = await addItem(newItem);
+      setItems(prev => [...prev, newItemFromDB]);
+
+      setNewItem({
+        name: '',
+        quantity: 0,
+        minQuantity: 1,
+        unit: ''
+      });
+      setIsDialogOpen(false);
+      toast.success("Item added successfully!");
+    } catch (error) {
+      console.error("Failed to add item:", error);
+      toast.error("Failed to add item. Please try again.");
+    }
   };
 
-  const updateQuantity = (itemId: string, change: number) => {
-    setItems(items.map(item => 
-      item.id === itemId 
-        ? { ...item, quantity: Math.max(0, item.quantity + change) }
-        : item
-    ));
+  const updateQuantity = async (itemId: string, change: number) => {
+    try {
+      const item = items.find(i => i.id === itemId);
+      if (!item) return;
+
+      const newQuantity = Math.max(0, item.quantity + change);
+      const updatedItem = await updateItem(itemId, { quantity: newQuantity });
+      setItems(prev => prev.map(i => i.id === itemId ? updatedItem : i));
+    } catch (error) {
+      console.error("Failed to update item quantity:", error);
+      toast.error("Failed to update item quantity. Please try again.");
+    }
   };
 
-  const deleteItem = (itemId: string) => {
-    setItems(items.filter(item => item.id !== itemId));
+  const handleDeleteItem = async (itemId: string) => {
+    try {
+      await deleteItemApi(itemId);
+      setItems(prev => prev.filter(item => item.id !== itemId));
+      toast.success("Item deleted successfully!");
+    } catch (error) {
+      console.error("Failed to delete item:", error);
+      toast.error("Failed to delete item. Please try again.");
+    }
   };
 
   const getStockStatus = (item: Item) => {
@@ -118,7 +136,7 @@ export const ItemInventory: React.FC<ItemInventoryProps> = ({ items, setItems })
                   />
                 </div>
               </div>
-              <Button onClick={addItem} className="w-full">Add Item</Button>
+              <Button onClick={handleAddItem} className="w-full">Add Item</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -166,7 +184,7 @@ export const ItemInventory: React.FC<ItemInventoryProps> = ({ items, setItems })
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => deleteItem(item.id)}
+                  onClick={() => handleDeleteItem(item.id)}
                   className="w-full"
                 >
                   🗑️ Delete

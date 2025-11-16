@@ -6,6 +6,8 @@ import { TaskManagement } from '@/components/TaskManagement';
 import { ItemInventory } from '@/components/ItemInventory';
 import { Button } from '@/components/ui/button';
 import { fetchMembers, loginMember } from '@/lib/memberApi';
+import { fetchTasks } from '@/lib/taskApi';
+import { fetchItems } from '@/lib/itemApi';
 
 type Tab = 'dashboard' | 'tasks' | 'items' | 'members';
 
@@ -28,69 +30,19 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [members, setMembers] = useState([]);
   
-  const [tasks, setTasks] = useState([
-    { 
-      id: '1', 
-      name: 'Clean Kitchen', 
-      description: 'Deep clean counters, sink, and appliances',
-      assignedTo: '1', 
-      schedule: 'Monday, Wednesday, Friday',
-      priority: 'high',
-      duration: 45,
-      completed: false,
-      dueDate: new Date('2025-06-09'),
-      weight: 3
-    },
-    { 
-      id: '2', 
-      name: 'Laundry', 
-      description: 'Wash, dry, and fold shared towels',
-      assignedTo: '2', 
-      schedule: 'Sunday',
-      priority: 'medium',
-      duration: 30,
-      completed: false,
-      dueDate: new Date('2025-06-08'),
-      weight: 2
-    },
-    { 
-      id: '3', 
-      name: 'Clean Bathroom', 
-      description: 'Scrub toilet, shower, and mop floor',
-      assignedTo: '3', 
-      schedule: 'Tuesday, Saturday',
-      priority: 'high',
-      duration: 60,
-      completed: true,
-      dueDate: new Date('2025-06-07'),
-      weight: 3
-    },
-  ]);
+  const [tasks, setTasks] = useState([]);
 
-  const [items, setItems] = useState([
-    { id: '1', name: 'Laundry Detergent', quantity: 2, minQuantity: 1, unit: 'bottles' },
-    { id: '2', name: 'Rice', quantity: 5, minQuantity: 2, unit: 'kg' },
-    { id: '3', name: 'Toilet Paper', quantity: 8, minQuantity: 4, unit: 'rolls' },
-    { id: '4', name: 'Dish Soap', quantity: 1, minQuantity: 1, unit: 'bottle' },
-  ]);
+  const [items, setItems] = useState([]);
 
   // Auth state
   const [user, setUser] = useState(getStoredUser());
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [loginError, setLoginError] = useState('');
 
-  // Save data to localStorage
+  // Save members to localStorage (for display purposes)
   useEffect(() => {
     localStorage.setItem('homeharmony-members', JSON.stringify(members));
   }, [members]);
-
-  useEffect(() => {
-    localStorage.setItem('homeharmony-tasks', JSON.stringify(tasks));
-  }, [tasks]);
-
-  useEffect(() => {
-    localStorage.setItem('homeharmony-items', JSON.stringify(items));
-  }, [items]);
 
   useEffect(() => {
     if (user) {
@@ -100,15 +52,10 @@ const Index = () => {
     }
   }, [user]);
 
-  // Load data from localStorage on mount
+  // Load members from localStorage on mount (for display purposes)
   useEffect(() => {
     const savedMembers = localStorage.getItem('homeharmony-members');
-    const savedTasks = localStorage.getItem('homeharmony-tasks');
-    const savedItems = localStorage.getItem('homeharmony-items');
-    
     if (savedMembers) setMembers(JSON.parse(savedMembers));
-    if (savedTasks) setTasks(JSON.parse(savedTasks));
-    if (savedItems) setItems(JSON.parse(savedItems));
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -119,14 +66,20 @@ const Index = () => {
       if (found) {
         found.is_admin = Boolean(found.is_admin); // Ensure boolean
         setUser(found);
-        // Fetch all members from Supabase after login
-        const allMembers = await fetchMembers();
+        // Fetch all data from Supabase after login
+        const [allMembers, allTasks, allItems] = await Promise.all([
+          fetchMembers(),
+          fetchTasks(),
+          fetchItems()
+        ]);
         setMembers(allMembers);
+        setTasks(allTasks);
+        setItems(allItems);
       } else {
         setLoginError('Invalid username or password');
       }
-    } catch (err: any) {
-      setLoginError('Login failed: ' + err.message);
+    } catch (err: unknown) {
+      setLoginError('Login failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
     }
   };
 
