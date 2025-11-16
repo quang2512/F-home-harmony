@@ -8,7 +8,7 @@ interface Member {
   name: string;
   avatar: string;
   color: string;
-  isAdmin: boolean;
+  is_admin: boolean;
 }
 
 interface Task {

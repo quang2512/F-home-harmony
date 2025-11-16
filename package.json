@@ -8,7 +8,15 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "migrate": "./supabase/run-migrations.sh",
+    "supabase:status": "supabase status",
+    "supabase:link": "supabase link",
+    "supabase:db:push": "supabase db push",
+    "supabase:db:diff": "supabase db diff",
+    "supabase:db:reset": "supabase db reset",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop"
   },
   "dependencies": {
     "@hookform/resolvers": "3.9.0",
@@ -80,6 +88,6 @@
     "tailwindcss": "3.4.11",
     "typescript": "5.5.3",
     "typescript-eslint": "8.0.1",
-    "vite": "5.4.19"
+    "vite": "^5.4.21"
   }
 }

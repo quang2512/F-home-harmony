@@ -14,9 +14,9 @@ function getStoredUser() {
     const user = localStorage.getItem('homeharmony-user');
     if (!user) return null;
     const parsed = JSON.parse(user);
-    // Ensure isAdmin is boolean
-    if (parsed && typeof parsed.isAdmin !== 'boolean') {
-      parsed.isAdmin = parsed.isAdmin === true || parsed.isAdmin === 'true';
+    // Ensure is_admin is boolean
+    if (parsed && typeof parsed.is_admin !== 'boolean') {
+      parsed.is_admin = parsed.is_admin === true || parsed.is_admin === 'true';
     }
     return parsed;
   } catch {
@@ -117,7 +117,7 @@ const Index = () => {
     try {
       const found = await loginMember(loginForm.username.trim(), loginForm.password);
       if (found) {
-        found.isAdmin = Boolean(found.isAdmin); // Ensure boolean
+        found.is_admin = Boolean(found.is_admin); // Ensure boolean
         setUser(found);
         // Fetch all members from Supabase after login
         const allMembers = await fetchMembers();

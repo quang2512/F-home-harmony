@@ -14,7 +14,7 @@ interface Member {
   password: string;
   avatar: string;
   color: string;
-  isAdmin: boolean;
+  is_admin: boolean;
 }
 
 interface MemberManagementProps {
@@ -45,14 +45,14 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({ members, set
 
   // Find if current user is admin
   const currentMember = members.find(m => m.id === currentUser.id);
-  const isCurrentUserAdmin = !!currentMember?.isAdmin;
+  const isCurrentUserAdmin = !!currentMember?.is_admin;
 
   const addMember = async () => {
     try {
       const member: Omit<Member, 'id'> = {
         ...newMember,
         password: '', // Set password as needed
-        isAdmin: false
+        is_admin: false
       };
       const created = await apiAddMember(member);
       setMembers([...members, created]);
@@ -71,7 +71,7 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({ members, set
     try {
       const member = members.find(m => m.id === memberId);
       if (!member) return;
-      const updated = await updateMember(memberId, { isAdmin: !member.isAdmin });
+      const updated = await updateMember(memberId, { is_admin: !member.is_admin });
       setMembers(members.map(m => m.id === memberId ? updated : m));
     } catch (err: any) {
       alert(err.message);
@@ -80,8 +80,8 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({ members, set
 
   const removeMember = async (memberId: string) => {
     // Prevent removing the last admin
-    const isLastAdmin = members.filter(m => m.isAdmin).length === 1 && 
-                        members.find(m => m.id === memberId)?.isAdmin;
+    const isLastAdmin = members.filter(m => m.is_admin).length === 1 &&
+                        members.find(m => m.id === memberId)?.is_admin;
     if (isLastAdmin) {
       alert("Cannot remove the last admin. Please assign admin privileges to another member first.");
       return;
@@ -168,7 +168,7 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({ members, set
                   </div>
                   <div>
                     <CardTitle className="text-lg">{member.name}</CardTitle>
-                    {member.isAdmin && (
+                    {member.is_admin && (
                       <Badge variant="default" className="text-xs">Admin</Badge>
                     )}
                   </div>
@@ -182,19 +182,19 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({ members, set
                   variant="outline"
                   size="sm"
                   className="w-full"
-                  disabled={!isCurrentUserAdmin || (currentMember && currentMember.id === member.id && member.isAdmin)}
+                  disabled={!isCurrentUserAdmin || (currentMember && currentMember.id === member.id && member.is_admin)}
                   title={
                     !isCurrentUserAdmin ? 'Only admins can assign or remove admin rights'
-                    : (currentMember && currentMember.id === member.id && member.isAdmin) ? 'You cannot remove yourself from admin'
+                    : (currentMember && currentMember.id === member.id && member.is_admin) ? 'You cannot remove yourself from admin'
                     : undefined
                   }
                 >
-                  {member.isAdmin ? '👑 Remove Admin' : '👑 Make Admin'}
+                  {member.is_admin ? '👑 Remove Admin' : '👑 Make Admin'}
                 </Button>
                 {!isCurrentUserAdmin && (
                   <div className="text-xs text-gray-400 text-center mt-1">Only admins can assign or remove admin rights</div>
                 )}
-                {currentMember && currentMember.id === member.id && member.isAdmin && (
+                {currentMember && currentMember.id === member.id && member.is_admin && (
                   <div className="text-xs text-gray-400 text-center mt-1">You cannot remove yourself from admin</div>
                 )}
                 <Button
